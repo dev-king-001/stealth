@@ -1,6 +1,7 @@
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Mail, AtSign, Bell, Check } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import { cn } from "@/lib/utils";
 
 type Notification = {
@@ -53,7 +54,15 @@ const icons = {
   system: Bell,
 };
 
-export function NotificationsPanel({ open, onClose }: { open: boolean; onClose: () => void }) {
+export function NotificationsPanel({
+  open,
+  onClose,
+  anchorRect,
+}: {
+  open: boolean;
+  onClose: () => void;
+  anchorRect: DOMRect | null;
+}) {
   const [notifications, setNotifications] = useState(initialNotifications);
   
   const unreadCount = notifications.filter((n) => !n.read).length;
@@ -66,7 +75,20 @@ export function NotificationsPanel({ open, onClose }: { open: boolean; onClose: 
     setNotifications(notifications.map((n) => (n.id === id ? { ...n, read: true } : n)));
   };
 
-  return (
+  useEffect(() => {
+    if (!open) return;
+    const onKey = (e: KeyboardEvent) => e.key === "Escape" && onClose();
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [open, onClose]);
+
+  if (typeof document === "undefined") return null;
+
+  const panelWidth = 360;
+  const top = anchorRect ? anchorRect.bottom + 8 : 64;
+  const right = anchorRect ? Math.max(8, window.innerWidth - anchorRect.right) : 12;
+
+  return createPortal(
     <AnimatePresence>
       {open && (
         <>
@@ -75,14 +97,15 @@ export function NotificationsPanel({ open, onClose }: { open: boolean; onClose: 
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={onClose}
-            className="fixed inset-0 z-40 bg-black/30 backdrop-blur-md"
+            className="fixed inset-0 z-[100] bg-black/40 backdrop-blur-xl"
           />
           <motion.div
             initial={{ opacity: 0, y: -8, scale: 0.96 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: -8, scale: 0.96 }}
             transition={{ type: "spring", stiffness: 300, damping: 28 }}
-            className="glass-modal absolute right-0 top-full z-50 mt-2 w-[360px] overflow-hidden rounded-2xl"
+            style={{ position: "fixed", top, right, width: panelWidth, zIndex: 110 }}
+            className="glass-modal overflow-hidden rounded-2xl"
           >
             {/* Header */}
             <div className="flex items-center justify-between border-b border-white/5 px-4 py-3">
@@ -164,6 +187,7 @@ export function NotificationsPanel({ open, onClose }: { open: boolean; onClose: 
           </motion.div>
         </>
       )}
-    </AnimatePresence>
+    </AnimatePresence>,
+    document.body
   );
 }
