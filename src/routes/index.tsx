@@ -1,6 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
-import { AnimatePresence, motion } from "framer-motion";
 import { AmbientBackground } from "@/components/mail/AmbientBackground";
 import { Sidebar } from "@/components/mail/Sidebar";
 import { Topbar } from "@/components/mail/Topbar";
@@ -21,6 +20,8 @@ import {
 } from "@/components/mail/data";
 import { usePreferences } from "@/features/preferences";
 import { CalendarWorkspace, useCalendar } from "@/features/calendar";
+import { FeedbackViewport } from "@/features/design-system/feedback/feedback-viewport";
+import { useFeedback } from "@/features/design-system/feedback/use-feedback";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -49,7 +50,6 @@ function MailApp() {
     body?: string;
   }>({});
   const [paletteOpen, setPaletteOpen] = useState(false);
-  const [toast, setToast] = useState<string | null>(null);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [customFolder, setCustomFolder] = useState<string | null>(null);
   const [filters, setFilters] = useState<MailFilters>(defaultMailFilters);
@@ -58,6 +58,7 @@ function MailApp() {
   const [calendarCreateRequest, setCalendarCreateRequest] = useState(0);
   const { preferences, setPreferences } = usePreferences();
   const calendar = useCalendar();
+  const { dismiss: dismissFeedback, items: feedbackItems, notify: showToast } = useFeedback();
 
   const folderCounts = useMemo(
     () =>
@@ -68,11 +69,6 @@ function MailApp() {
   );
   const visibleEmails = useMemo(() => getEmailsForFolder(emails, folder), [emails, folder]);
   const selected = emails.find((e) => e.id === selectedId) ?? null;
-
-  const showToast = (message: string) => {
-    setToast(message);
-    setTimeout(() => setToast(null), 4000);
-  };
 
   const updateEmail = (id: string, patch: Partial<Email>) => {
     setEmails((prev) => prev.map((e) => (e.id === id ? { ...e, ...patch } : e)));
@@ -376,27 +372,7 @@ function MailApp() {
         onShowToast={showToast}
       />
 
-      {/* Toast */}
-      <AnimatePresence>
-        {toast && (
-          <motion.div
-            initial={{ opacity: 0, y: 24, scale: 0.95 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 12, scale: 0.97 }}
-            transition={{ type: "spring", stiffness: 300, damping: 28 }}
-            className="glass-strong fixed bottom-6 left-1/2 z-[200] flex -translate-x-1/2 items-center gap-3 rounded-xl px-4 py-3 text-xs shadow-[0_18px_50px_-12px_rgba(0,0,0,0.7)]"
-          >
-            <span className="pulse-dot h-1.5 w-1.5 rounded-full bg-[oklch(0.85_0.005_270)]" />
-            <span className="text-foreground">{toast}</span>
-            <button
-              onClick={() => setToast(null)}
-              className="ml-2 text-muted-foreground transition hover:text-foreground"
-            >
-              Dismiss
-            </button>
-          </motion.div>
-        )}
-      </AnimatePresence>
+      <FeedbackViewport items={feedbackItems} onDismiss={dismissFeedback} />
     </div>
   );
 }
