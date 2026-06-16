@@ -30,6 +30,22 @@ export type MailLocation = Exclude<MailFolder, VirtualMailFolder>;
  */
 export type SenderPolicy = "allow" | "verify" | "block";
 
+/**
+ * Reminder metadata attached when a message is snoozed. Persisted on the email
+ * so the snoozed folder can show when it returns and offer edit/undo.
+ * See src/features/snooze.
+ */
+export type SnoozeState = {
+  /** ISO datetime the message should return to the inbox. */
+  remindAt: string;
+  /** Which option produced this reminder. */
+  choice: "later-today" | "tomorrow" | "next-week" | "custom";
+  /** Human label captured at set-time, e.g. "Tomorrow". */
+  label: string;
+  /** ISO datetime the snooze was created. */
+  createdAt: string;
+};
+
 export type Email = {
   id: string;
   from: string;
@@ -46,6 +62,7 @@ export type Email = {
   avatarColor: string;
   event?: MailEvent;
   senderPolicy?: SenderPolicy;
+  snooze?: SnoozeState;
 };
 
 export type MailFilters = {
@@ -287,6 +304,12 @@ export const emails: Email[] = [
     folder: "snoozed",
     labels: ["Event", "Snoozed", "Personal"],
     avatarColor: c(2),
+    snooze: {
+      remindAt: "2026-06-14T10:30:00",
+      choice: "tomorrow",
+      label: "Tomorrow",
+      createdAt: "2026-06-13T09:41:00",
+    },
     event: {
       id: "mail-studio-visit",
       title: "Studio visit",

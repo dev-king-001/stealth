@@ -4,6 +4,7 @@ import {
   Archive,
   BadgeCheck,
   Braces,
+  Clock,
   File,
   FileArchive,
   FileText,
@@ -23,7 +24,8 @@ import { cn } from "@/lib/utils";
 import { EventMailCard, type CalendarEvent, type CalendarResponse } from "@/features/calendar";
 import { OTPCard, detectOtp } from "@/features/otp";
 import { ConvertSenderButton, SenderBadge } from "@/features/sender-conversion";
-import { deriveProof, isVerified, type Email } from "./data";
+import { SnoozeBanner } from "@/features/snooze";
+import type { Email } from "./data";
 
 export type EmailViewActions = {
   onReply?: (email: Email, body?: string) => void;
@@ -33,6 +35,8 @@ export type EmailViewActions = {
   onTrash?: (email: Email) => void;
   onToggleStar?: (email: Email) => void;
   onConvertSender?: (email: Email) => void;
+  onSnooze?: (email: Email) => void;
+  onUnsnooze?: (email: Email) => void;
   onShowToast?: (message: string) => void;
   onAddEvent?: (email: Email) => CalendarEvent | void;
   getCalendarEvent?: (email: Email) => CalendarEvent | null;
@@ -179,6 +183,16 @@ export function EmailView({
                     className="hidden sm:inline-flex"
                   />
                 )}
+                {actions.onSnooze && (
+                  <motion.button
+                    whileTap={{ scale: 0.9 }}
+                    onClick={() => actions.onSnooze?.(email)}
+                    title="Snooze"
+                    className="rounded-md p-2 text-muted-foreground transition hover:bg-white/[0.06] hover:text-foreground"
+                  >
+                    <Clock className="h-4 w-4" />
+                  </motion.button>
+                )}
                 <motion.button
                   whileTap={{ scale: 0.9 }}
                   onClick={() => actions.onArchive?.(email)}
@@ -252,6 +266,14 @@ export function EmailView({
                     sender={email.from}
                     address={email.email}
                     onManage={() => actions.onConvertSender?.(email)}
+                  />
+                ) : null}
+
+                {email.folder === "snoozed" && email.snooze ? (
+                  <SnoozeBanner
+                    state={email.snooze}
+                    onEdit={() => actions.onSnooze?.(email)}
+                    onUnsnooze={() => actions.onUnsnooze?.(email)}
                   />
                 ) : null}
 

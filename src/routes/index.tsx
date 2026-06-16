@@ -30,7 +30,15 @@ import {
   type SenderConversionTarget,
   type SenderPolicyChoice,
 } from "@/features/sender-conversion";
-import { CommandPalette, type CommandId } from "@/features/command-palette";
+import {
+  SnoozeDialog,
+  formatSnoozeSummary,
+  snoozePatch,
+  unsnoozePatch,
+  useSnooze,
+  type SnoozeTarget,
+} from "@/features/snooze";
+import type { SnoozeState } from "@/components/mail/data";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -67,6 +75,7 @@ function MailApp() {
   const [calendarCreateRequest, setCalendarCreateRequest] = useState(0);
   const { preferences, setPreferences, hydrated } = usePreferences();
   const senderConversion = useSenderConversion();
+  const snooze = useSnooze();
 
   // Gate: show onboarding only after localStorage has been read (hydrated) and only
   // when it has not been completed in a previous session.
@@ -151,82 +160,18 @@ function MailApp() {
     showToast(result.toast.message, { tone: result.toast.tone });
   };
 
-  // The command palette acts as a control plane: each command id maps to a
-  // concrete effect on the shared state. Dangerous commands are already
-  // confirmed inside the palette before reaching here. `email` defaults to the
-  // current selection but can be overridden (e.g. inspecting a searched proof).
-  const runCommand = (id: CommandId, email: Email | null = selected) => {
-    switch (id) {
-      case "compose":
-        openCompose();
-        break;
-      case "go-inbox":
-        setFolder("inbox");
-        setCustomFolder(null);
-        break;
-      case "go-starred":
-        setFolder("starred");
-        setCustomFolder(null);
-        break;
-      case "go-sent":
-        setFolder("sent");
-        setCustomFolder(null);
-        break;
-      case "open-settings":
-        setSettingsOpen(true);
-        break;
-      case "archive-thread":
-        if (email) {
-          updateEmail(email.id, { folder: "archive" });
-          showToast(`Archived "${email.subject}"`);
-        }
-        break;
-      case "approve-sender":
-        if (email) {
-          updateEmail(email.id, resolveSenderConversion(email, "allow").patch);
-          showToast(`${email.from} is now a trusted contact`, { tone: "success" });
-        }
-        break;
-      case "block-sender":
-        if (email) {
-          updateEmail(email.id, resolveSenderConversion(email, "block").patch);
-          showToast(`${email.from} blocked — postage marked for refund`, { tone: "danger" });
-        }
-        break;
-      case "quote-postage":
-        if (email) {
-          showToast(`Postage for ${email.from}: ${preferences.minimumPostage} XLM minimum`, {
-            tone: "neutral",
-          });
-        }
-        break;
-      case "inspect-proof":
-        if (email) {
-          const proof = deriveProof(email);
-          void navigator.clipboard?.writeText(proof);
-          showToast(`Proof ${proof} copied to clipboard`, { tone: "neutral" });
-        }
-        break;
-      case "settle-delivery":
-        if (email) {
-          updateEmail(email.id, {
-            folder: "receipts",
-            labels: [...(email.labels ?? []).filter((l) => l !== "Settled"), "Settled"],
-          });
-          showToast(`Delivery settled for "${email.subject}"`, { tone: "success" });
-        }
-        break;
-      case "refund-postage":
-        if (email) {
-          updateEmail(email.id, { folder: "spam" });
-          showToast(`Postage refunded to ${email.from}`, { tone: "warning" });
-        }
-        break;
-      case "relay-diagnostics":
-        showToast("Relay Node 07 · 42ms round-trip · queue healthy", { tone: "neutral" });
-        break;
-    }
-    setPaletteOpen(false);
+  // Snooze opens the guided dialog; nothing changes until the user confirms.
+  const openSnooze = (e: Email) => snooze.open({ emailId: e.id, subject: e.subject });
+
+  const handleSnooze = (target: SnoozeTarget, state: SnoozeState) => {
+    updateEmail(target.emailId, snoozePatch(state));
+    snooze.close();
+    showToast(formatSnoozeSummary(state), { tone: "success" });
+  };
+
+  const handleUnsnooze = (e: Email) => {
+    updateEmail(e.id, unsnoozePatch());
+    showToast(`"${e.subject}" returned to your inbox`);
   };
 
   const quoteBody = (e: Email) =>
@@ -274,6 +219,8 @@ function MailApp() {
       showToast(e.starred ? "Removed star" : "Starred");
     },
     onConvertSender: openSenderConversion,
+    onSnooze: openSnooze,
+    onUnsnooze: handleUnsnooze,
     onShowToast: showToast,
     onAddEvent: (e: Email) => {
       if (!e.event) return;
@@ -292,11 +239,7 @@ function MailApp() {
   };
 
   const handleContextAction = (action: ContextAction, email: Email) => {
-    if (action === "snooze") {
-      updateEmail(email.id, { folder: "snoozed", time: "Tomorrow" });
-      showToast(`Snoozed "${email.subject}" until tomorrow`);
-      return;
-    }
+    // Snooze is handled by the guided dialog via onSnooze, not here.
     if (action === "schedule") {
       openCompose({
         to: email.email,
@@ -436,6 +379,7 @@ function MailApp() {
               email={selected}
               onAction={handleContextAction}
               onConvertSender={openSenderConversion}
+              onSnooze={openSnooze}
               calendarEvents={calendar.visibleEvents}
               calendars={calendar.calendars}
               onOpenCalendar={(eventId) => {
@@ -521,6 +465,18 @@ function MailApp() {
         target={senderConversion.target}
         onConfirm={handleConvertSender}
         onClose={senderConversion.close}
+      />
+
+      <SnoozeDialog
+        target={snooze.target}
+        initialState={
+          snooze.target
+            ? emails.find((item) => item.id === snooze.target?.emailId)?.snooze
+            : undefined
+        }
+        events={calendar.events}
+        onConfirm={handleSnooze}
+        onClose={snooze.close}
       />
     </div>
   );
