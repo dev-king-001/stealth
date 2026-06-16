@@ -7,10 +7,10 @@ import { EmailList } from "@/components/mail/EmailList";
 import { EmailView } from "@/components/mail/EmailView";
 import { Compose, type ComposeSubmission } from "@/components/mail/Compose";
 import { RightPanel, type ContextAction } from "@/components/mail/RightPanel";
-import { CommandPalette } from "@/components/mail/CommandPalette";
 import { SettingsModal } from "@/components/mail/SettingsModal";
 import {
   defaultMailFilters,
+  deriveProof,
   emails as initialEmails,
   getEmailsForFolder,
   mailFolders,
@@ -425,24 +425,20 @@ function MailApp() {
       <CommandPalette
         open={paletteOpen}
         onClose={() => setPaletteOpen(false)}
-        onCompose={() => openCompose()}
+        context={{ email: selected, folder }}
+        emails={emails}
+        onRunCommand={runCommand}
         onNavigate={(f) => {
           setFolder(f);
           setCustomFolder(null);
         }}
-        onArchive={() => {
-          if (selected) {
-            emailActions.onArchive(selected);
-          }
-        }}
-        onOpenSettings={() => setSettingsOpen(true)}
-        emails={emails}
         onSelectEmail={(email) => {
           setCustomFolder(null);
           setFilters(defaultMailFilters);
           setFolder(email.folder);
           setSelectedId(email.id);
         }}
+        onOpenSettings={() => setSettingsOpen(true)}
       />
       <CalendarWorkspace
         open={calendarOpen}

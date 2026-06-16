@@ -134,6 +134,22 @@ export function getFolderLabel(folder: MailFolder) {
   return mailFolders.find((item) => item.key === folder)?.label ?? folder;
 }
 
+/** Folders whose messages carry a verified Stellar identity proof. */
+const verifiedLocations = new Set<MailLocation>(["verified", "priority", "encrypted", "receipts"]);
+
+/** Whether a message's sender identity is considered verified. */
+export function isVerified(email: Email) {
+  return verifiedLocations.has(email.folder);
+}
+
+/**
+ * Deterministic mock proof hash for a message. Shared by the reader's protocol
+ * badge and the command palette so "inspect proof" and the badge agree.
+ */
+export function deriveProof(email: Email) {
+  return `${email.id.padStart(2, "0")}c7...${email.from.length.toString(16)}a9`;
+}
+
 export function getEmailsForFolder(allEmails: Email[], folder: MailFolder) {
   if (folder === "all")
     return allEmails.filter((email) => email.folder !== "spam" && email.folder !== "trash");
