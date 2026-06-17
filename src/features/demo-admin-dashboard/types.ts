@@ -49,6 +49,9 @@ export type DashboardSection =
   | "attachments"
   | "events"
   | "templates"
+  | "campaigns"
+  | "analytics"
+  | "tags"
   | "audit";
 
 /** Props passed to the dashboard shell. */
@@ -156,6 +159,3 @@ export interface DemoItem {
   title: string;
   description: string;
 }
-
-
-
