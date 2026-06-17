@@ -45,7 +45,6 @@ type ResizablePanelProps = React.ComponentProps<typeof Panel> & {
   onExpand?: () => void;
 };
 
-
 const ResizablePanel = ({
   collapsible,
   collapsedSize = 0,
