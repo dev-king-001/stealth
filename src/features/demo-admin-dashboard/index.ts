@@ -168,6 +168,42 @@ export {
 } from "./proofFormatting";
 export { demoProofRecords } from "./fixtures/proofRecordFixtures";
 
+// Campaign Timeline (issue #260): types, fixtures, helpers, display tokens.
+export type {
+  CampaignPhase,
+  CampaignPhaseKind,
+  CampaignPhaseStatus,
+  CampaignTimeline,
+  Milestone,
+  MilestoneKind,
+  MilestoneStatus,
+  PreviewWindow,
+  ScheduledSend,
+  ScheduledSendStatus,
+} from "./types/campaignTimeline";
+export { activeCampaignTimeline, draftCampaignTimeline } from "./fixtures/campaignTimelineFixtures";
+export {
+  getActivePhase,
+  getPhaseForDate,
+  getPhaseDurationDays,
+  getSendsInWindow,
+  getTimelineDateRange,
+  getUpcomingMilestones,
+  isDateInPhase,
+  sortPhasesByStartDate,
+  validateCampaignTimeline,
+  validateMilestones,
+  validatePhases,
+  validatePreviewWindows,
+  validateScheduledSends,
+} from "./utils/campaignTimelineHelpers";
+export {
+  CAMPAIGN_PHASE_TOKENS,
+  getMilestoneToken,
+  getPhaseToken,
+  MILESTONE_KIND_TOKENS,
+} from "./constants/displayTokens";
+
 // Draft dataset admin store (issue #172): reducer, selectors, hook, types, fixture.
 export { draftDatasetReducer, initialDraftDatasetState } from "./reducers/draftDatasetReducer";
 export {
