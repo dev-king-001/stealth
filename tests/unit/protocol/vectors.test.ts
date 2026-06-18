@@ -289,12 +289,12 @@ import { Route } from "../../../src/routes/api/v1/postage/index";
 import { getApiContext } from "../../../src/server/api/context";
 
 describe("relay_submission", () => {
-  const handler = Route.options.server?.handlers?.POST;
+  const handler = (Route.options as any).server?.handlers?.POST;
 
   for (const c of (vectors.categories as any).relay_submission.cases) {
     it(c.id, async () => {
       const context = getApiContext();
-      context.repository.reset();
+      (context.repository as any).reset();
 
       // For the policy block case, we need to pre-configure a blocked rule.
       if (c.id === "relay/policy/blocked-no-mailbox-leak") {
