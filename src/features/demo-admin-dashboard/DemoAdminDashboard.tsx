@@ -33,6 +33,10 @@ import { TemplatePicker } from "./templates";
 import { AdminDataTable, type Column } from "./components/AdminDataTable";
 import { CampaignsContent } from "./CampaignsContent";
 import { PRESET_SCENARIOS } from "./fixtures/presets";
+import { CampaignMessageAssignmentPanel } from "./components/CampaignMessageAssignmentPanel";
+import { CampaignSnapshots } from "./components/CampaignSnapshots";
+import { CampaignTimelinePanel } from "./components/CampaignTimelinePanel";
+import type { Draft } from "./types/draft";
 
 // ─── Default Deterministic fake data ──────────────────────────────────────────
 
