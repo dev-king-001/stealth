@@ -28,11 +28,7 @@ describe("admin empty state presets", () => {
   });
 
   it("returns the matching preset object", () => {
-    expect(getAdminEmptyStatePreset("messages")).toBe(
-      ADMIN_EMPTY_STATE_PRESETS.messages,
-    );
-    expect(getAdminEmptyStatePreset("validation").title).toBe(
-      "No validation results yet",
-    );
+    expect(getAdminEmptyStatePreset("messages")).toBe(ADMIN_EMPTY_STATE_PRESETS.messages);
+    expect(getAdminEmptyStatePreset("validation").title).toBe("No validation results yet");
   });
 });

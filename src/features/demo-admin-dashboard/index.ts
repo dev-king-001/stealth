@@ -253,7 +253,4 @@ export {
   ADMIN_EMPTY_STATE_KINDS,
   getAdminEmptyStatePreset,
 } from "./constants/adminEmptyStates";
-export type {
-  AdminEmptyStateCopy,
-  AdminEmptyStateKind,
-} from "./constants/adminEmptyStates";
+export type { AdminEmptyStateCopy, AdminEmptyStateKind } from "./constants/adminEmptyStates";
