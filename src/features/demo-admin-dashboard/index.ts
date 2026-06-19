@@ -233,6 +233,18 @@ export {
 // Draft dataset admin store (issue #172): reducer, selectors, hook, types, fixture.
 export { draftDatasetReducer, initialDraftDatasetState } from "./reducers/draftDatasetReducer";
 export {
+  adminEditHistoryReducer,
+  canRedoAdminEdit,
+  canUndoAdminEdit,
+  createAdminEditHistory,
+  summarizeAdminEditHistory,
+} from "./reducers/historyReducer";
+export type {
+  AdminEditHistoryAction,
+  AdminEditHistoryState,
+  AdminEditHistorySummary,
+} from "./reducers/historyReducer";
+export {
   selectAllDrafts,
   selectDraftById,
   selectDraftCount,
