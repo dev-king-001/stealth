@@ -5,6 +5,10 @@ avatar treatment, timestamps, selection, and folder-specific rendering. Keep
 changes aligned with the current mailbox model and the Stealth Mail positioning
 around safety, speed, and sender control.
 
+For the bottom tab bar, sidebar collapse, topbar actions, and the responsive
+small-screen switch that drives them, see
+[`MOBILE_NAVIGATION.md`](./MOBILE_NAVIGATION.md).
+
 ## Local File Map
 
 - `EmailList.tsx` renders the desktop list, filter tabs, empty state, bulk
