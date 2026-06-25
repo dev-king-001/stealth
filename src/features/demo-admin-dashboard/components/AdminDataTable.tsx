@@ -68,14 +68,17 @@ export function AdminDataTable<T>({
   const [sortKey, setSortKey] = useState<string | null>(defaultSortKey || null);
   const [sortDirection, setSortDirection] = useState<"asc" | "desc">(defaultSortDirection);
 
-  const handleSort = useCallback((key: string) => {
-    if (sortKey === key) {
-      setSortDirection((prev) => (prev === "asc" ? "desc" : "asc"));
-    } else {
-      setSortKey(key);
-      setSortDirection("asc");
-    }
-  }, [sortKey]);
+  const handleSort = useCallback(
+    (key: string) => {
+      if (sortKey === key) {
+        setSortDirection((prev) => (prev === "asc" ? "desc" : "asc"));
+      } else {
+        setSortKey(key);
+        setSortDirection("asc");
+      }
+    },
+    [sortKey],
+  );
 
   const sortedData = useMemo(() => {
     const col = columns.find((c) => c.key === sortKey);
