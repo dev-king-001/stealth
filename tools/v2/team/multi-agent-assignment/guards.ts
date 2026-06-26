@@ -1,6 +1,6 @@
 /**
  * Multi-Agent Assignment Guards
- * 
+ *
  * Safety and performance constraints for assigning items to multiple agents.
  */
 
@@ -17,7 +17,7 @@ export class AssignmentValidationError extends Error {
 
 /**
  * Validates and sanitizes a list of agent IDs for an assignment operation.
- * 
+ *
  * @param agentIds - The raw array of agent IDs.
  * @returns A sanitized, deduplicated array of valid agent IDs.
  * @throws AssignmentValidationError if the input violates safety constraints.
@@ -30,7 +30,7 @@ export function sanitizeAgentAssignments(agentIds: unknown): string[] {
   // Cap the number of agents to prevent unnecessary work on large datasets
   if (agentIds.length > MAX_AGENTS_PER_ASSIGNMENT) {
     throw new AssignmentValidationError(
-      `Cannot assign more than ${MAX_AGENTS_PER_ASSIGNMENT} agents at once.`
+      `Cannot assign more than ${MAX_AGENTS_PER_ASSIGNMENT} agents at once.`,
     );
   }
 
@@ -60,19 +60,19 @@ export function sanitizeAgentAssignments(agentIds: unknown): string[] {
 /**
  * Validates the metadata payload associated with an assignment.
  * Prevents large emails or histories from being passed in the event payload.
- * 
+ *
  * @param payload - The assignment metadata payload.
  */
 export function validateAssignmentPayloadSize(payload: Record<string, unknown>): void {
   const payloadString = JSON.stringify(payload);
-  
+
   // Hard limit on assignment metadata payload (e.g., 5KB)
   // This ensures attachments or full email bodies aren't accidentally included.
   const MAX_PAYLOAD_BYTES = 5 * 1024;
-  
+
   if (new Blob([payloadString]).size > MAX_PAYLOAD_BYTES) {
     throw new AssignmentValidationError(
-      "Assignment payload is too large. Do not include full emails or attachments in the assignment event."
+      "Assignment payload is too large. Do not include full emails or attachments in the assignment event.",
     );
   }
 }
