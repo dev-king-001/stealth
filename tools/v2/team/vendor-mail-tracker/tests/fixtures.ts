@@ -2,7 +2,13 @@
 // Use these to create consistent test data
 
 import type { Vendor, CommunicationRecord, VendorMetrics } from "../types";
-import { VendorCategory, VendorStatus, CommunicationType, CommunicationStatus, Trend } from "../types";
+import {
+  VendorCategory,
+  VendorStatus,
+  CommunicationType,
+  CommunicationStatus,
+  Trend,
+} from "../types";
 
 /**
  * Create a mock vendor with sensible defaults
