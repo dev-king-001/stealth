@@ -337,10 +337,7 @@ impl LifecycleContract {
         if record.amount != postage.amount {
             return Err(Error::PostageMismatch);
         }
-        if !matches!(
-            record.terminal,
-            LifecycleTerminal::Open | LifecycleTerminal::Delivered | LifecycleTerminal::Read
-        ) {
+        if !Self::can_transition(record.terminal, terminal) {
             return Err(Error::TerminalStateMismatch);
         }
         if record.receipt_required && record.delivered_at.is_none() {
@@ -351,6 +348,42 @@ impl LifecycleContract {
         env.storage().persistent().set(&DataKey::Record(message_id.clone()), &record);
         Self::publish_event(&env, Self::terminal_symbol(terminal), message_id, record.clone());
         Ok(record)
+    }
+
+    fn can_transition(current: LifecycleTerminal, next: LifecycleTerminal) -> bool {
+        match next {
+            LifecycleTerminal::Settled => matches!(
+                current,
+                LifecycleTerminal::Open | LifecycleTerminal::Delivered | LifecycleTerminal::Read
+            ),
+            LifecycleTerminal::Refunded => matches!(
+                current,
+                LifecycleTerminal::Open
+                    | LifecycleTerminal::Delivered
+                    | LifecycleTerminal::Read
+                    | LifecycleTerminal::Disputed
+            ),
+            LifecycleTerminal::Disputed => matches!(
+                current,
+                LifecycleTerminal::Open
+                    | LifecycleTerminal::Delivered
+                    | LifecycleTerminal::Read
+                    | LifecycleTerminal::Expired
+            ),
+            LifecycleTerminal::Expired => matches!(
+                current,
+                LifecycleTerminal::Open | LifecycleTerminal::Delivered | LifecycleTerminal::Read
+            ),
+            LifecycleTerminal::Reclaimed => matches!(
+                current,
+                LifecycleTerminal::Open
+                    | LifecycleTerminal::Delivered
+                    | LifecycleTerminal::Read
+                    | LifecycleTerminal::Expired
+                    | LifecycleTerminal::Disputed
+            ),
+            LifecycleTerminal::Open | LifecycleTerminal::Delivered | LifecycleTerminal::Read => false,
+        }
     }
 
     fn evaluate_policy(

@@ -233,6 +233,11 @@ impl PostageContract {
             .persistent()
             .get(&key)
             .ok_or(Error::PostageNotFound)?;
+        if Self::is_terminal(postage.status)
+            || env.ledger().timestamp() >= Self::reclaimable_at(&postage)
+        {
+            return Err(Error::AlreadyResolved);
+        }
         Self::verify_guard(&env, message_id.clone(), &postage, LifecycleTerminal::Settled)?;
         Self::resolve(env, message_id, PostageStatus::Settled)
     }
@@ -244,6 +249,11 @@ impl PostageContract {
             .persistent()
             .get(&key)
             .ok_or(Error::PostageNotFound)?;
+        if Self::is_terminal(postage.status)
+            || env.ledger().timestamp() >= Self::reclaimable_at(&postage)
+        {
+            return Err(Error::AlreadyResolved);
+        }
         Self::verify_guard(&env, message_id.clone(), &postage, LifecycleTerminal::Refunded)?;
         Self::resolve(env, message_id, PostageStatus::Refunded)
     }
@@ -792,6 +802,7 @@ mod test {
         let postage = client.submit(&id(&env, 1), &sender, &recipient, &125);
         assert_eq!(postage.expires_at, 40);
         assert_eq!(postage.dispute_until, 40);
+        bind_lifecycle(&env, &lifecycle, id(&env, 1), &sender, &recipient, 125);
 
         env.ledger().set_timestamp(40);
         let reclaimed = client.reclaim(&id(&env, 1));
@@ -921,6 +932,7 @@ mod test {
         let client = PostageContractClient::new(&setup.env, &setup.contract_id);
 
         client.submit(&id(&setup.env, 1), &setup.sender, &setup.recipient, &125);
+        bind_lifecycle(&setup.env, &setup.lifecycle, id(&setup.env, 1), &setup.sender, &setup.recipient, 125);
         setup.env.ledger().set_timestamp(90_042);
 
         assert_eq!(
@@ -936,6 +948,7 @@ mod test {
         let token = token::TokenClient::new(&setup.env, &setup.asset);
 
         client.submit(&id(&setup.env, 1), &setup.sender, &setup.recipient, &125);
+        bind_lifecycle(&setup.env, &setup.lifecycle, id(&setup.env, 1), &setup.sender, &setup.recipient, 125);
         setup.env.ledger().set_timestamp(86_442);
         client.dispute(&id(&setup.env, 1));
         setup.env.ledger().set_timestamp(90_041);
@@ -953,6 +966,8 @@ mod test {
 
         client.submit(&id(&setup.env, 1), &setup.sender, &setup.recipient, &125);
         client.submit(&id(&setup.env, 2), &setup.sender, &setup.recipient, &125);
+        bind_lifecycle(&setup.env, &setup.lifecycle, id(&setup.env, 1), &setup.sender, &setup.recipient, 125);
+        bind_lifecycle(&setup.env, &setup.lifecycle, id(&setup.env, 2), &setup.sender, &setup.recipient, 125);
         setup.env.ledger().set_timestamp(90_041);
         assert_eq!(
             client.settle(&id(&setup.env, 1)).status,
@@ -976,6 +991,7 @@ mod test {
         let client = PostageContractClient::new(&setup.env, &setup.contract_id);
 
         client.submit(&id(&setup.env, 1), &setup.sender, &setup.recipient, &125);
+        bind_lifecycle(&setup.env, &setup.lifecycle, id(&setup.env, 1), &setup.sender, &setup.recipient, 125);
         setup.env.ledger().set_timestamp(90_042);
         client.reclaim(&id(&setup.env, 1));
 
@@ -997,6 +1013,7 @@ mod test {
         );
 
         client.submit(&id(&setup.env, 2), &setup.sender, &setup.recipient, &125);
+        bind_lifecycle(&setup.env, &setup.lifecycle, id(&setup.env, 2), &setup.sender, &setup.recipient, 125);
         client.refund(&id(&setup.env, 2));
         assert_eq!(
             client.try_reclaim(&id(&setup.env, 2)),
@@ -1004,6 +1021,7 @@ mod test {
         );
 
         client.submit(&id(&setup.env, 3), &setup.sender, &setup.recipient, &125);
+        bind_lifecycle(&setup.env, &setup.lifecycle, id(&setup.env, 3), &setup.sender, &setup.recipient, 125);
         client.settle(&id(&setup.env, 3));
         assert_eq!(
             client.try_dispute(&id(&setup.env, 3)),
@@ -1043,6 +1061,7 @@ mod test {
         let setup = setup(0);
         let client = PostageContractClient::new(&setup.env, &setup.contract_id);
         client.submit(&id(&setup.env, 1), &setup.sender, &setup.recipient, &125);
+        bind_lifecycle(&setup.env, &setup.lifecycle, id(&setup.env, 1), &setup.sender, &setup.recipient, 125);
         setup.env.ledger().set_timestamp(86_442);
 
         let wrong_address = Address::generate(&setup.env);
@@ -1065,6 +1084,7 @@ mod test {
         let setup = setup(0);
         let client = PostageContractClient::new(&setup.env, &setup.contract_id);
         client.submit(&id(&setup.env, 1), &setup.sender, &setup.recipient, &125);
+        bind_lifecycle(&setup.env, &setup.lifecycle, id(&setup.env, 1), &setup.sender, &setup.recipient, 125);
 
         let wrong_address = Address::generate(&setup.env);
         setup.env.mock_auths(&[soroban_sdk::testutils::MockAuth {
@@ -1086,6 +1106,7 @@ mod test {
         let setup = setup(0);
         let client = PostageContractClient::new(&setup.env, &setup.contract_id);
         client.submit(&id(&setup.env, 1), &setup.sender, &setup.recipient, &125);
+        bind_lifecycle(&setup.env, &setup.lifecycle, id(&setup.env, 1), &setup.sender, &setup.recipient, 125);
 
         let wrong_address = Address::generate(&setup.env);
         setup.env.mock_auths(&[soroban_sdk::testutils::MockAuth {
@@ -1128,6 +1149,7 @@ mod test {
         let setup = setup(0);
         let client = PostageContractClient::new(&setup.env, &setup.contract_id);
         client.submit(&id(&setup.env, 1), &setup.sender, &setup.recipient, &125);
+        bind_lifecycle(&setup.env, &setup.lifecycle, id(&setup.env, 1), &setup.sender, &setup.recipient, 125);
         setup.env.ledger().set_timestamp(86_442);
 
         setup.env.mock_auths(&[]);
