@@ -1,13 +1,8 @@
 // Communication tracking service
 // Handles tracking, history, and communication records
 
-import type {
-  CommunicationRecord,
-  CommunicationType,
-  CommunicationStatus,
-  TrackingFilter,
-  VendorTrackingStats,
-} from "../types";
+import { CommunicationType, CommunicationStatus } from "../types";
+import type { CommunicationRecord, TrackingFilter, VendorTrackingStats } from "../types";
 import { clampCollection, createSafeRecord, sanitizeText } from "./security-guards.js";
 
 export class TrackingService {

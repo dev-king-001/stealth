@@ -1,14 +1,8 @@
 // Vendor management service
 // Handles CRUD operations, profiles, and vendor lifecycle
 
-import type {
-  Vendor,
-  VendorCategory,
-  VendorStatus,
-  VendorProfile,
-  TrustLevel,
-  VendorFilter,
-} from "../types";
+import { VendorCategory, VendorStatus } from "../types";
+import type { Vendor, VendorProfile, TrustLevel, VendorFilter } from "../types";
 import { clampCollection, sanitizeText, sanitizeVendorInput } from "./security-guards.js";
 
 export class VendorService {
