@@ -27,7 +27,11 @@ describe("POST /api/v1/receipts/:messageId/read", () => {
 
   it("marks a receipt as read when requested by the recipient", async () => {
     const repository = getApiContext().repository;
-    await createDeliveryReceipt(repository, { messageId, recipient, sender }, new Date("2026-07-17T12:00:00Z"));
+    await createDeliveryReceipt(
+      repository,
+      { messageId, recipient, sender },
+      new Date("2026-07-17T12:00:00Z"),
+    );
 
     const request = createRequest({ readAt: "2026-07-17T12:05:00Z" });
     const response = await Route.options.server.handlers.POST({ request, params: { messageId } });
@@ -47,7 +51,11 @@ describe("POST /api/v1/receipts/:messageId/read", () => {
 
   it("rejects unauthorized actors", async () => {
     const repository = getApiContext().repository;
-    await createDeliveryReceipt(repository, { messageId, recipient, sender }, new Date("2026-07-17T12:00:00Z"));
+    await createDeliveryReceipt(
+      repository,
+      { messageId, recipient, sender },
+      new Date("2026-07-17T12:00:00Z"),
+    );
 
     const request = createRequest({ readAt: "2026-07-17T12:05:00Z" }, sender); // unauthorized, sender can't mark read
     const response = await Route.options.server.handlers.POST({ request, params: { messageId } });
@@ -59,7 +67,11 @@ describe("POST /api/v1/receipts/:messageId/read", () => {
 
   it("rejects invalid payloads", async () => {
     const repository = getApiContext().repository;
-    await createDeliveryReceipt(repository, { messageId, recipient, sender }, new Date("2026-07-17T12:00:00Z"));
+    await createDeliveryReceipt(
+      repository,
+      { messageId, recipient, sender },
+      new Date("2026-07-17T12:00:00Z"),
+    );
 
     const request = createRequest({ readAt: "not-a-date" });
     const response = await Route.options.server.handlers.POST({ request, params: { messageId } });
@@ -71,13 +83,20 @@ describe("POST /api/v1/receipts/:messageId/read", () => {
 
   it("rejects duplicate read receipts deterministically", async () => {
     const repository = getApiContext().repository;
-    await createDeliveryReceipt(repository, { messageId, recipient, sender }, new Date("2026-07-17T12:00:00Z"));
+    await createDeliveryReceipt(
+      repository,
+      { messageId, recipient, sender },
+      new Date("2026-07-17T12:00:00Z"),
+    );
 
     const request1 = createRequest({ readAt: "2026-07-17T12:05:00Z" });
     await Route.options.server.handlers.POST({ request: request1, params: { messageId } });
 
     const request2 = createRequest({ readAt: "2026-07-17T12:06:00Z" });
-    const response2 = await Route.options.server.handlers.POST({ request: request2, params: { messageId } });
+    const response2 = await Route.options.server.handlers.POST({
+      request: request2,
+      params: { messageId },
+    });
 
     expect(response2.status).toBe(409);
     const body = await response2.json();
@@ -86,7 +105,11 @@ describe("POST /api/v1/receipts/:messageId/read", () => {
 
   it("rejects stale timestamps (before delivery)", async () => {
     const repository = getApiContext().repository;
-    await createDeliveryReceipt(repository, { messageId, recipient, sender }, new Date("2026-07-17T12:00:00Z"));
+    await createDeliveryReceipt(
+      repository,
+      { messageId, recipient, sender },
+      new Date("2026-07-17T12:00:00Z"),
+    );
 
     const request = createRequest({ readAt: "2026-07-17T11:00:00Z" }); // before delivery
     const response = await Route.options.server.handlers.POST({ request, params: { messageId } });
