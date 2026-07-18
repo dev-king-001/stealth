@@ -70,9 +70,6 @@ export function ok<T>(value: T): WatchlistResult<T> {
   return { ok: true, value };
 }
 
-export function fail<T = never>(
-  error: WatchlistErrorCode,
-  message: string,
-): WatchlistResult<T> {
+export function fail<T = never>(error: WatchlistErrorCode, message: string): WatchlistResult<T> {
   return { ok: false, error, message };
 }

@@ -24,14 +24,8 @@ export { createWatchlistService } from "./services/watchlist.service";
 export type { WatchlistService, WatchlistServiceConfig } from "./services/watchlist.service";
 
 // Non-UI execution contract
-export {
-  createWatchlistContract,
-} from "./services/execution-contract";
-export {
-  WatchlistErrorCode,
-  ok,
-  fail,
-} from "./contract";
+export { createWatchlistContract } from "./services/execution-contract";
+export { WatchlistErrorCode, ok, fail } from "./contract";
 export type {
   WatchlistContract,
   WatchlistContractInput,

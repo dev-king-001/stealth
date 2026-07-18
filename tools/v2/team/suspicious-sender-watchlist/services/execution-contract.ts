@@ -24,9 +24,7 @@ import {
  *
  * @param service The presentation-agnostic watchlist service to adapt.
  */
-export function createWatchlistContract(
-  service: WatchlistService,
-): WatchlistContract {
+export function createWatchlistContract(service: WatchlistService): WatchlistContract {
   return {
     async execute(
       input: WatchlistContractInput,

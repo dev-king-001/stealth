@@ -8,16 +8,8 @@
 import { describe, it, expect } from "vitest";
 import { createWatchlistService } from "../services/watchlist.service";
 import { createWatchlistContract } from "../services/execution-contract";
-import {
-  WatchlistErrorCode,
-  ok,
-  fail,
-  type WatchlistResult,
-} from "../contract";
-import {
-  VALID_ADD_INPUT,
-  VALID_UPDATE_RISK_INPUT,
-} from "../fixtures/contract.fixtures";
+import { WatchlistErrorCode, ok, fail, type WatchlistResult } from "../contract";
+import { VALID_ADD_INPUT, VALID_UPDATE_RISK_INPUT } from "../fixtures/contract.fixtures";
 
 function makeContract() {
   const service = createWatchlistService();

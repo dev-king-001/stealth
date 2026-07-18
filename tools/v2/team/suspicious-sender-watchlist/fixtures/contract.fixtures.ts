@@ -5,9 +5,7 @@
  * Used by the contract tests and as documentation of the contract shape.
  */
 
-import type {
-  WatchlistContractInput,
-} from "../contract";
+import type { WatchlistContractInput } from "../contract";
 import type { AddEntryInput, UpdateRiskInput } from "../types";
 
 /** A valid "add" payload (happy path). */
