@@ -1,5 +1,12 @@
-import type { IdempotencyRecord, MailboxPolicy, Postage, Receipt, SenderRule } from "./domain";
-import type { ApiRepository } from "./repository";
+import type {
+  IdempotencyRecord,
+  MailboxPolicy,
+  Postage,
+  PostageStatus,
+  Receipt,
+  SenderRule,
+} from "./domain";
+import type { ApiRepository, PostageTransitionResult } from "./repository";
 
 function key(owner: string, sender: string) {
   return `${owner}:${sender}`;
@@ -40,6 +47,27 @@ export class MemoryApiRepository implements ApiRepository {
   async setPostage(postage: Postage) {
     this.postage.set(postage.messageId, structuredClone(postage));
     return structuredClone(postage);
+  }
+
+  async transitionPostage(
+    messageId: string,
+    expectedStatus: PostageStatus,
+    nextStatus: PostageStatus,
+  ): Promise<PostageTransitionResult> {
+    // No `await` occurs between the read and the write below, so this
+    // check-then-act sequence runs to completion within a single
+    // microtask and cannot interleave with a concurrent call for the
+    // same messageId, giving us the atomicity the interface requires.
+    const current = this.postage.get(messageId);
+    if (!current) {
+      return { outcome: "not-found" };
+    }
+    if (current.status !== expectedStatus) {
+      return { outcome: "conflict", postage: structuredClone(current) };
+    }
+    const updated: Postage = { ...current, status: nextStatus };
+    this.postage.set(messageId, updated);
+    return { outcome: "applied", postage: structuredClone(updated) };
   }
 
   async getReceipt(messageId: string) {

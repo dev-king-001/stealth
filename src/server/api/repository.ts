@@ -1,4 +1,26 @@
-import type { IdempotencyRecord, MailboxPolicy, Postage, Receipt, SenderRule } from "./domain";
+import type {
+  IdempotencyRecord,
+  MailboxPolicy,
+  Postage,
+  PostageStatus,
+  Receipt,
+  SenderRule,
+} from "./domain";
+
+/**
+ * Outcome of an atomic compare-and-swap postage state transition.
+ *
+ * - "not-found": no postage record exists for the given messageId.
+ * - "conflict": the postage exists but its current status did not match the
+ *   expected status, so no transition was applied. `postage` reflects the
+ *   actual current record so callers can build a deterministic error.
+ * - "applied": the transition was applied atomically. `postage` reflects the
+ *   updated record.
+ */
+export type PostageTransitionResult =
+  | { outcome: "not-found" }
+  | { outcome: "conflict"; postage: Postage }
+  | { outcome: "applied"; postage: Postage };
 
 export type AcquireIdempotencyResult =
   | { status: "acquired" }
@@ -12,6 +34,20 @@ export interface ApiRepository {
   setSenderRule(owner: string, sender: string, rule: SenderRule): Promise<SenderRule>;
   getPostage(messageId: string): Promise<Postage | null>;
   setPostage(postage: Postage): Promise<Postage>;
+  /**
+   * Atomically transitions a postage record from `expectedStatus` to
+   * `nextStatus`. Implementations MUST guarantee that concurrent callers
+   * racing on the same messageId observe a single winner: exactly one call
+   * receives `{ outcome: "applied" }` and every other concurrent/subsequent
+   * call receives `{ outcome: "conflict" }` reflecting the terminal state.
+   * This must not be implemented as a plain get-then-set, since that is
+   * vulnerable to double-settlement under concurrent requests.
+   */
+  transitionPostage(
+    messageId: string,
+    expectedStatus: PostageStatus,
+    nextStatus: PostageStatus,
+  ): Promise<PostageTransitionResult>;
   getReceipt(messageId: string): Promise<Receipt | null>;
   setReceipt(receipt: Receipt): Promise<Receipt>;
   acquireIdempotencyRecord(key: string, leaseMs: number): Promise<AcquireIdempotencyResult>;
