@@ -5,14 +5,14 @@ import {
   requireActor,
   requireActorMatches,
   requirePrincipal,
-} from "../../src/server/api/actor";
+} from "../../../src/server/api/actor";
 import {
   createApiContext,
   extractPrincipal,
   getApiContext,
   type ApiPrincipal,
-} from "../../src/server/api/context";
-import { MemoryApiRepository } from "../../src/server/api/memory-repository";
+} from "../../../src/server/api/context";
+import { MemoryApiRepository } from "../../../src/server/api/memory-repository";
 
 const validAddress = `G${"A".repeat(55)}`;
 const attackerAddress = `G${"B".repeat(55)}`;
