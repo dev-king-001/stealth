@@ -50,6 +50,18 @@ This header only preserves authorization boundaries during development. It is no
 Production must derive the actor from a verified wallet challenge or signed session and must ignore
 caller-supplied identity headers at the public edge.
 
+### Authentication nonce lifecycle
+
+Signed authentication begins by issuing a cryptographically random 32-byte nonce. Each nonce is
+stored with its actor, authentication purpose, creation time, and expiration time. Its lifetime is
+five minutes by default and can be configured with `STEALTH_AUTH_NONCE_TTL_MS` as documented in
+[`src/config/README.md`](../../src/config/README.md).
+
+Consumption atomically checks the actor, purpose, and expiration before marking the nonce used.
+Only one concurrent request can succeed; replay attempts are rejected, and actor or purpose
+mismatches do not consume the legitimate caller's nonce. Production storage adapters must provide
+the same atomic compare-and-consume guarantee as the in-memory development implementation.
+
 ```bash
 curl -X PUT http://localhost:8080/api/v1/policies/GAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA \
   -H "content-type: application/json" \
