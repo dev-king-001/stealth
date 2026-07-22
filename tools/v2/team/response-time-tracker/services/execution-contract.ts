@@ -1,8 +1,5 @@
 import type { DateRange, ResponseTimeEntry, ResponseTimeMetrics, TeamMember } from "../types";
-import {
-  createResponseTimeService,
-  type ResponseTimeServiceConfig,
-} from "./response-time-service";
+import { createResponseTimeService, type ResponseTimeServiceConfig } from "./response-time-service";
 
 /**
  * Non-UI execution contract for the Response Time Tracker.

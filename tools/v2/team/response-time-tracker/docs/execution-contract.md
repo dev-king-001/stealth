@@ -59,10 +59,10 @@ not on the presence of a particular key.
 
 ## Error codes
 
-| Code                 | Meaning                                                                                   | When it is returned                                    |
-| --------------------- | ------------------------------------------------------------------------------------------ | --------------------------------------------------------- |
-| `INVALID_DATE_RANGE`  | `range.start` is after `range.end`, or either bound fails to parse as a date.               | Before any fetch is attempted — no service call is made. |
-| `FETCH_FAILED`        | The underlying data fetch rejected (e.g. a simulated failure via `failureRate`).            | After the service call, when `Promise.all(...)` rejects.  |
+| Code                 | Meaning                                                                          | When it is returned                                      |
+| -------------------- | -------------------------------------------------------------------------------- | -------------------------------------------------------- |
+| `INVALID_DATE_RANGE` | `range.start` is after `range.end`, or either bound fails to parse as a date.    | Before any fetch is attempted — no service call is made. |
+| `FETCH_FAILED`       | The underlying data fetch rejected (e.g. a simulated failure via `failureRate`). | After the service call, when `Promise.all(...)` rejects. |
 
 Both codes are exhaustive for the current contract: any call either resolves
 successfully or resolves with one of these two codes. Adding a new failure
