@@ -6,9 +6,20 @@
  * where two byte sequences first diverge. This helper compares equal-length
  * byte arrays without early-exit, and follows a documented safe path for
  * length mismatches.
+ *
+ * This module is intentionally self-contained: it defines its own minimal,
+ * non-secret error type so it does not depend on sibling crypto modules that
+ * may land in separate PRs.
  */
 
-import { CryptoError } from "./errors";
+/** Minimal non-secret error carrying a stable code (no key/plaintext leakage). */
+export class ConstantTimeError extends Error {
+  readonly code = "crypto_validation_error" as const;
+  constructor(message: string) {
+    super(message);
+    this.name = "ConstantTimeError";
+  }
+}
 
 /**
  * Compare two equal-length byte arrays in constant time.
@@ -49,7 +60,7 @@ export function constantTimeEqual(a: Uint8Array, b: Uint8Array): boolean {
  */
 export function constantTimeEqualOrThrow(a: Uint8Array, b: Uint8Array): boolean {
   if (a.length !== b.length) {
-    throw new CryptoError("crypto_validation_error", "compared byte arrays differ in length");
+    throw new ConstantTimeError("compared byte arrays differ in length");
   }
   return constantTimeEqual(a, b);
 }
