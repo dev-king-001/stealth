@@ -1,6 +1,9 @@
 import { describe, expect, it } from "vitest";
 
-import { constantTimeEqual, constantTimeEqualOrThrow } from "../../../src/services/crypto/constant-time";
+import {
+  constantTimeEqual,
+  constantTimeEqualOrThrow,
+} from "../../../src/services/crypto/constant-time";
 
 function bytes(values: number[]): Uint8Array {
   return new Uint8Array(values);
