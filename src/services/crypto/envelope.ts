@@ -7,11 +7,15 @@
  * plaintext is never returned, logged, or attached to thrown errors.
  */
 
+import { getCryptoTestVectors } from "./testing";
+
 export interface EnvelopeAttachment {
   filename: string;
   content_type: string;
   size_bytes: number;
   content_hash: string;
+  encryption_metadata?: EncryptionMetadata;
+  ciphertext?: string;
 }
 
 export interface EncryptionMetadata {
@@ -45,6 +49,7 @@ export interface SealEnvelopeInput {
     content_type: string;
     size_bytes: number;
     data?: ArrayBuffer;
+    content_hash?: string;
   }>;
 }
 
@@ -99,14 +104,23 @@ export async function sealEnvelope(input: SealEnvelopeInput): Promise<SealedEnve
     throw new Error("Cannot seal an empty message body");
   }
 
-  const key = await crypto.subtle.generateKey({ name: "AES-GCM", length: 256 }, true, [
-    "encrypt",
-    "decrypt",
-  ]);
-  const iv = crypto.getRandomValues(new Uint8Array(12));
+  const { generateKey, getRandomValues, now } = getCryptoTestVectors();
+
+  const key = generateKey
+    ? await generateKey({ name: "AES-GCM", length: 256 }, true, ["encrypt", "decrypt"])
+    : await crypto.subtle.generateKey({ name: "AES-GCM", length: 256 }, true, [
+        "encrypt",
+        "decrypt",
+      ]);
+  const ivArray = new Uint8Array(12);
+  const iv = getRandomValues ? getRandomValues(ivArray) : crypto.getRandomValues(ivArray);
   const plaintext = new TextEncoder().encode(body);
   const ciphertext = new Uint8Array(
-    await crypto.subtle.encrypt({ name: "AES-GCM", iv }, key, plaintext),
+    await crypto.subtle.encrypt(
+      { name: "AES-GCM", iv: iv as BufferSource },
+      key,
+      plaintext as BufferSource,
+    ),
   );
 
   // AES-GCM appends a 16-byte auth tag to the end of the ciphertext.
@@ -114,16 +128,45 @@ export async function sealEnvelope(input: SealEnvelopeInput): Promise<SealedEnve
 
   const attachments: EnvelopeAttachment[] = [];
   for (const attachment of input.attachments ?? []) {
-    const hash = attachment.data
-      ? await sha256Hex(new Uint8Array(attachment.data))
-      : await sha256Hex(
-          new TextEncoder().encode(attachment.filename + ":" + attachment.size_bytes),
+    let hash: string;
+    let encMetadata: EncryptionMetadata | undefined;
+    let ciphertextStr: string | undefined;
+
+    if (attachment.data) {
+      const dataBytes = new Uint8Array(attachment.data);
+      hash = await sha256Hex(dataBytes);
+      if (attachment.content_hash && hash !== attachment.content_hash) {
+        throw new Error(
+          `Mismatch between supplied bytes and content_hash for attachment ${attachment.filename}`,
         );
+      }
+
+      const attIv = crypto.getRandomValues(new Uint8Array(12));
+      const attCiphertext = new Uint8Array(
+        await crypto.subtle.encrypt({ name: "AES-GCM", iv: attIv }, key, dataBytes),
+      );
+      const attTag = attCiphertext.slice(attCiphertext.length - GCM_TAG_BYTES);
+
+      encMetadata = {
+        algorithm: "AES-256-GCM",
+        nonce: toHex(attIv),
+        mac: toHex(attTag),
+      };
+      ciphertextStr = toBase64(attCiphertext);
+    } else if (attachment.content_hash) {
+      hash = attachment.content_hash;
+    } else {
+      throw new Error(
+        `Attachment ${attachment.filename} must include either data bytes or a validated content_hash`,
+      );
+    }
     attachments.push({
       filename: attachment.filename,
       content_type: attachment.content_type,
       size_bytes: attachment.size_bytes,
       content_hash: hash,
+      ...(encMetadata ? { encryption_metadata: encMetadata } : {}),
+      ...(ciphertextStr ? { ciphertext: ciphertextStr } : {}),
     });
   }
 
@@ -131,7 +174,7 @@ export async function sealEnvelope(input: SealEnvelopeInput): Promise<SealedEnve
     version: "v1",
     sender: input.sender,
     recipient: input.recipient,
-    timestamp: new Date().toISOString(),
+    timestamp: now ? now().toISOString() : new Date().toISOString(),
     encryption_metadata: {
       algorithm: "AES-256-GCM",
       nonce: toHex(iv),
