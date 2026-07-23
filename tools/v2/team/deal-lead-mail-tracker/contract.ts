@@ -24,10 +24,10 @@ export interface DealLeadTrackerOutput {
 }
 
 export enum DealLeadTrackerErrorCode {
-  INVALID_INPUT = 'INVALID_INPUT',
-  PARSING_ERROR = 'PARSING_ERROR',
-  NETWORK_ERROR = 'NETWORK_ERROR',
-  INTERNAL_ERROR = 'INTERNAL_ERROR'
+  INVALID_INPUT = "INVALID_INPUT",
+  PARSING_ERROR = "PARSING_ERROR",
+  NETWORK_ERROR = "NETWORK_ERROR",
+  INTERNAL_ERROR = "INTERNAL_ERROR",
 }
 
 export class DealLeadTrackerError extends Error {
@@ -35,7 +35,7 @@ export class DealLeadTrackerError extends Error {
 
   constructor(message: string, code: DealLeadTrackerErrorCode) {
     super(message);
-    this.name = 'DealLeadTrackerError';
+    this.name = "DealLeadTrackerError";
     this.code = code;
   }
 }
