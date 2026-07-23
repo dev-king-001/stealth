@@ -46,15 +46,16 @@ deadline-detector/
 
 **Planned components:**
 
-| Component | Responsibility |
-| --- | --- |
+| Component               | Responsibility                                                                                             |
+| ----------------------- | ---------------------------------------------------------------------------------------------------------- |
 | `DeadlineDetectorShell` | Root layout container. Composes child components, connects hooks, and manages the primary review workflow. |
-| `MessagePreview` | Renders a read-only preview of the passed-in source message, highlighting detected deadline phrases. |
-| `StatusFilter` | Keyboard-accessible radio or toggle controls to filter detected, missed, or review-required results. |
-| `DeadlineResultCard` | Displays an expected deadline, urgency badge, timezone, and actionable buttons. |
-| `ReviewActionRow` | Interactive UI to explicitly approve, ignore, or modify a detected deadline without emitting side-effects. |
+| `MessagePreview`        | Renders a read-only preview of the passed-in source message, highlighting detected deadline phrases.       |
+| `StatusFilter`          | Keyboard-accessible radio or toggle controls to filter detected, missed, or review-required results.       |
+| `DeadlineResultCard`    | Displays an expected deadline, urgency badge, timezone, and actionable buttons.                            |
+| `ReviewActionRow`       | Interactive UI to explicitly approve, ignore, or modify a detected deadline without emitting side-effects. |
 
 **Rules:**
+
 - No direct imports from `src/` (main app).
 - Provide accessible empty, loading, error, and success states.
 - Color must never be the only status signal.
@@ -66,12 +67,13 @@ deadline-detector/
 
 **Planned modules:**
 
-| Module | Responsibility |
-| --- | --- |
+| Module            | Responsibility                                                                                                                               |
+| ----------------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
 | `detectorService` | Orchestrates the detection rules over the input text and outputs normalized, classified deadlines (detected, needs-review, missed, ignored). |
-| `dateParser` | Parses ISO formats, US short dates, explicit 24-hour times, and relative phrases like "tomorrow", "next week", "by EOD". |
+| `dateParser`      | Parses ISO formats, US short dates, explicit 24-hour times, and relative phrases like "tomorrow", "next week", "by EOD".                     |
 
 **Rules:**
+
 - Services are entirely pure, side-effect free, and testable via Node or Vitest without a DOM.
 - Must not communicate with external calendars, mailboxes, or APIs.
 
@@ -81,11 +83,12 @@ deadline-detector/
 
 **Planned hooks:**
 
-| Hook | Responsibility |
-| --- | --- |
+| Hook                   | Responsibility                                                                                                                                                         |
+| ---------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `useDeadlineDetection` | Wraps `detectorService`, taking an array of local `DeadlineMessage` inputs to expose a ranked array of `ExpectedDeadline` outputs, loading states, and filter setters. |
 
 **Rules:**
+
 - Hooks must not write to any global context, URL, or global Redux/Zustand store.
 - Do not trigger actual notification delivery or scheduling side effects.
 
@@ -94,15 +97,18 @@ deadline-detector/
 **Responsibility:** Verify the detection rules using controlled synthetic inputs and define the structural contract.
 
 **Planned components:**
+
 - `deadline-fixtures.test.mjs`: Tests `detectorService` against the local `sample-deadline-messages.json` fixture.
 
 **Rules:**
+
 - Fixtures must never include real user PII, real email addresses, or actual mail databases.
 - Must run deterministically on CI without needing a backend environment.
 
 ### `types/`
 
 **Responsibility:** Isolated type definitions for the module boundaries.
+
 - `DeadlineMessage`: Local input shape (id, sender, subject, body, receivedAt, userTimezone).
 - `ExpectedDeadline`: Local output shape (id, sourceMessageId, dueDate, status, urgency, confidence).
 
@@ -111,9 +117,11 @@ deadline-detector/
 ## Data Ownership and Dependencies
 
 ### Data Sources
+
 This module **owns no persistent state**. All inputs are transient objects passed into the module (such as via React props to `DeadlineDetectorShell` or arguments to `detectorService`).
 
 ### Integration Constraints
+
 - **Database Schema**: Must not modify Prisma schemas, migrations, or local SQLite structures.
 - **Dependency Injection**: Dependencies are scoped to the folder. If external libraries are necessary for date parsing (e.g., `date-fns`), they must already be present in the workspace `package.json`. No new unapproved global dependencies.
 - **Future Integration Plan**: When the tool is eventually integrated into the core Inbox, an explicit follow-up issue will define consent behavior, reminder-write permissions, privacy handling, and audit tracing. Until then, the output stays strictly local.
